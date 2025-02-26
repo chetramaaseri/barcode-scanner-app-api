@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql-barcode-app
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"  # Allow remote connections
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d # Initialization script
+    networks:
+      - barcode-app-network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin-barcode-app
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "7000:80"
+    depends_on:
+      - mysql
+    networks:
+      - barcode-app-network
+
+  api:
+    build: ./api/
+    container_name: barcode-app
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "7001:80"
+    volumes:
+      - ./api:/var/www/html/
+    networks:
+      - barcode-app-network
+      
+networks:
+  barcode-app-network:
+    driver: bridge
