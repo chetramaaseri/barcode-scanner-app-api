@@ -74,7 +74,8 @@ class Db {
         if (!$stmt->execute()) {
             throw new Exception("Execute failed: " . $stmt->error);
         }
-        $this->params = []; // Reset parameters after execution
+        $this->join = $this->params = []; // Reset parameters after execution
+        $this->select = $this->where = $this->from = $this->update = $this->insert = $this->limit = $this->order = null;
         return $stmt;
     }
 
@@ -139,6 +140,18 @@ class Db {
         $data = $result->num_rows;
         return $data;
     }
+    
+    /**
+     * Returns the number of affected rows in the result set.
+     *
+     * @param mysqli_stmt $stmt The prepared statement object.
+     * @return int The number of affected rows.
+     * @throws Exception If fetching results fails.
+     */
+    public function affected_rows($stmt) {
+        $data = $stmt->affected_rows;
+        return $data;
+    }
 
     /**
      * Builds and executes a SELECT query based on the current state of the query builder.
@@ -201,6 +214,13 @@ class Db {
         $column = $args[0];
         $value = $args[1];
 
+        // Check if the column contains an operator (e.g., "created_at >=")
+        $operator = '=';
+        if (preg_match('/(.*?)(\s*(<=|>=|<>|<|>|=)\s*)$/', $column, $matches)) {
+            $column = trim($matches[1]); // Extract the column name
+            $operator = trim($matches[2]); // Extract the operator
+        }
+
         // Split the column into table alias and column name (if applicable)
         if (strpos($column, '.') !== false) {
             list($tableAlias, $columnName) = explode('.', $column);
@@ -210,9 +230,9 @@ class Db {
         }
 
         if (empty($this->where)) {
-            $this->where .= " WHERE $column = ? ";
+            $this->where .= " WHERE $column $operator ? ";
         } else {
-            $this->where .= " AND $column = ? ";
+            $this->where .= " AND $column $operator ? ";
         }
     }
 

@@ -4,7 +4,7 @@ services:
     container_name: mysql-barcode-app
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: 
       MYSQL_ROOT_HOST: "%"  # Allow remote connections
     ports:
       - "3306:3306"
@@ -20,7 +20,7 @@ services:
     restart: always
     environment:
       PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: 
     ports:
       - "7000:80"
     depends_on:

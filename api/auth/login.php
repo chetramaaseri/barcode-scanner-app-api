@@ -39,8 +39,9 @@ $password = filter_var($REQUEST['password'], FILTER_SANITIZE_STRING);
 try {
     $query = $db->select('u.*, s.scope, s.role')
             ->from('users u')
-            ->where('u.mobile', $mobile) // Using alias 'u'
+            ->where('u.mobile', $mobile)
             ->join('LEFT', 'scopes s', 'u.scope_id = s.scope_id')
+            ->join('LEFT', 'sessions ss', 'u.scope_id = ss.session_id')
             ->get();
     $user = $db->row_array($query);
     if(empty($user)){
@@ -50,8 +51,11 @@ try {
     }
     $token = md5(uniqid(rand(), true));
     $user['token'] = $token;
-    $db->insert('sessions', ['token' => $token, 'user_id' => $user['user_id']]);
-    Response::success($user, 'User retrieved successfully');
+    $query = $db->where('user_id', $user['user_id'])->update('sessions', ['token' => $token]);
+    if($db->affected_rows($query) == 0){
+        $db->insert('sessions', ['token' => $token, 'user_id' => $user['user_id']]);
+    }
+    Response::success($user, 'Login Successfull');
 } catch (\Throwable $th) {
     ApiError::throwInternalServerError($th->getMessage());
 }
