@@ -18,8 +18,8 @@ class ApiError {
      */
     public static function throw($statusCode, $message, $details = []) {
         // Set the HTTP response code
-        // http_response_code(200);
-        http_response_code($statusCode);
+        http_response_code(200);
+        // http_response_code($statusCode);
 
         // Construct the error response
         $response = [
